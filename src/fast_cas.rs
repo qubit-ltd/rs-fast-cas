@@ -8,6 +8,7 @@
 //! Policy-driven compare-and-swap executor for compact [`u64`] state codes.
 
 use std::convert::Infallible;
+use std::hint::spin_loop;
 use std::thread;
 
 use super::{
@@ -257,6 +258,8 @@ impl FastCas {
             attempts += 1;
             if self.policy.should_yield_before(attempts) {
                 thread::yield_now();
+            } else {
+                spin_loop();
             }
         }
     }
@@ -345,7 +348,7 @@ impl FastCas {
     /// assert!(ok.is_updated());
     /// assert_eq!(ok.current(), 1);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn compare_update(
         &self,
         state: &FastCasState,
@@ -391,7 +394,7 @@ impl FastCas {
     ///
     /// assert_eq!(ok.into_output(), 21);
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn compare_update_with<R, F>(
         &self,
         state: &FastCasState,
