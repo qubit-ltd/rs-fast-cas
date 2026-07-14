@@ -1,5 +1,12 @@
 # Qubit Fast CAS
 
+[![Rust CI](https://github.com/qubit-ltd/rs-fast-cas/actions/workflows/ci.yml/badge.svg)](https://github.com/qubit-ltd/rs-fast-cas/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://qubit-ltd.github.io/rs-fast-cas/coverage-badge.json)](https://qubit-ltd.github.io/rs-fast-cas/coverage/)
+[![Crates.io](https://img.shields.io/crates/v/qubit-fast-cas.svg?color=blue)](https://crates.io/crates/qubit-fast-cas)
+[![Rust](https://img.shields.io/badge/rust-1.94+-blue.svg?logo=rust)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![English](https://img.shields.io/badge/docs-English-blue.svg)](README.md)
+
 面向可复用 `u64` 状态机的轻量级 compare-and-swap 原语。
 
 `CasCell` 持有一个原子状态字并提供无界重试的函数式更新循环；`FastCas`
