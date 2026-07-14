@@ -62,6 +62,19 @@ assert_eq!(success.into_output(), "started");
 
 `FastCasState` 是 `CasCell` 的类型别名。所有状态值均使用 `u64`。
 
+## 并发语义
+
+读取使用 Acquire 内存序，写入使用 Release 内存序，成功的读改写操作使用
+AcqRel 内存序。发生冲突后，更新闭包可能执行多次，因此闭包应避免不可重复
+执行的副作用。
+
+`CasCell::update` 和 `try_update` 的重试不保证公平性，也没有完成时间上界；
+持续竞争可能使某次操作长期无法完成。需要有界冲突预算时应使用 `FastCas`。
+
+比较操作只检查当前 `u64` 值，无法检测 ABA 变化。如果必须识别中间状态变化，
+应在状态字中编码 generation counter。成功或错误元数据中的状态值只代表终止
+尝试时的观测；其他写入者随后可能立即改变共享状态。
+
 ## 从 qubit-cas 0.8 迁移
 
 Fast CAS 状态值从 `usize` 改为 `u64`。`FastCasState` 也从

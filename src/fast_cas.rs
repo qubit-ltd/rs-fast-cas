@@ -32,6 +32,11 @@ use super::{
 ///   [`Self::update_by`] to be safe to call again after conflicts: re-read the
 ///   current code from the closure argument each time; avoid non-idempotent
 ///   side effects inside the closure.
+/// - Compares only the current `u64` value and therefore does not detect ABA
+///   changes. Encode a generation counter in the state word when intermediate
+///   transitions must be detected.
+/// - Reports the state observed by the terminal attempt. Another writer may
+///   change the shared state immediately after that observation.
 ///
 /// [`FastCas::compare_update`] and [`FastCas::compare_update_with`] perform a
 /// **single** CAS attempt per call and **ignore** the configured policy (no
@@ -179,6 +184,9 @@ impl FastCas {
     /// It may run **multiple times** when another thread wins the CAS between
     /// your decision and the write; only [`FastCasDecision::Update`] performs a
     /// write. [`FastCasDecision::Finish`] succeeds without mutating `state`.
+    /// Success and error metadata capture an observation from the terminal
+    /// attempt; they are not a promise that the shared state remains unchanged
+    /// after this method returns.
     ///
     /// # Parameters
     /// - `state`: Shared state code.

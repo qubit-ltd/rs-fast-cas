@@ -64,6 +64,22 @@ assert_eq!(success.into_output(), "started");
 
 `FastCasState` is an alias for `CasCell`. All state values use `u64`.
 
+## Concurrency semantics
+
+Loads use Acquire ordering, stores use Release ordering, and successful
+read-modify-write operations use AcqRel ordering. Update closures may run more
+than once after conflicts, so they should avoid non-idempotent side effects.
+
+`CasCell::update` and `try_update` retry without fairness or a completion bound;
+sustained contention can delay an operation indefinitely. Use `FastCas` when a
+bounded conflict budget is required.
+
+Comparisons inspect only the current `u64` value and cannot detect ABA changes.
+Encode a generation counter in the state word when intermediate transitions
+must be detected. State values returned in success or error metadata describe
+the terminal attempt's observation; another writer may change the shared state
+immediately afterward.
+
 ## Migrating from qubit-cas 0.8
 
 Fast CAS state values changed from `usize` to `u64`. `FastCasState` also changed
