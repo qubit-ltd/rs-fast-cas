@@ -8,19 +8,27 @@
 //! An atomic `u64` cell with functional compare-and-swap updates.
 
 use std::convert::Infallible;
-
-use qubit_atomic::Atomic;
+use std::sync::atomic::{
+    AtomicU64,
+    Ordering,
+};
 
 /// An atomic `u64` cell with reusable compare-and-swap update loops.
 ///
 /// Update closures may run multiple times when concurrent writers cause CAS
 /// conflicts. They should derive their result only from the supplied state and
 /// avoid non-idempotent side effects.
+///
+/// Functional updates retry without fairness or a completion bound. Sustained
+/// contention can therefore delay an update indefinitely. Comparisons use only
+/// the current `u64` value and do not detect ABA changes; callers that must
+/// detect an intermediate change should encode a generation counter in the
+/// state word.
 #[derive(Debug, Default)]
 #[repr(transparent)]
 pub struct CasCell {
     /// Atomic state word owned by this cell.
-    state: Atomic<u64>,
+    state: AtomicU64,
 }
 
 impl CasCell {
@@ -36,7 +44,7 @@ impl CasCell {
     #[inline]
     pub fn new(value: u64) -> Self {
         Self {
-            state: Atomic::new(value),
+            state: AtomicU64::new(value),
         }
     }
 
@@ -47,7 +55,7 @@ impl CasCell {
     /// The currently stored value.
     #[inline]
     pub fn load(&self) -> u64 {
-        self.state.load()
+        self.state.load(Ordering::Acquire)
     }
 
     /// Stores a state word with release ordering.
@@ -57,7 +65,7 @@ impl CasCell {
     /// - `value`: Value to store.
     #[inline]
     pub fn store(&self, value: u64) {
-        self.state.store(value);
+        self.state.store(value, Ordering::Release);
     }
 
     /// Atomically replaces the state word and returns its previous value.
@@ -71,7 +79,7 @@ impl CasCell {
     /// The value stored before the swap.
     #[inline]
     pub fn swap(&self, value: u64) -> u64 {
-        self.state.swap(value)
+        self.state.swap(value, Ordering::AcqRel)
     }
 
     /// Replaces `expected` with `next` when the current value matches.
@@ -90,7 +98,14 @@ impl CasCell {
     /// Returns the observed current value when it differs from `expected`.
     #[inline]
     pub fn compare_set(&self, expected: u64, next: u64) -> Result<(), u64> {
-        self.state.compare_set(expected, next)
+        self.state
+            .compare_exchange(
+                expected,
+                next,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            )
+            .map(|_| ())
     }
 
     /// Repeatedly computes and installs a new state until CAS succeeds.
@@ -100,6 +115,8 @@ impl CasCell {
     /// after conflicts. Only output from the committed attempt is returned.
     /// A panic from the operation propagates and leaves the state unchanged by
     /// that attempt.
+    /// This unbounded loop does not guarantee fairness or completion under
+    /// sustained contention.
     ///
     /// # Parameters
     ///
@@ -128,6 +145,8 @@ impl CasCell {
     /// attempt. The operation may run more than once and should avoid
     /// non-idempotent side effects. A panic propagates and leaves the state
     /// unchanged by that attempt.
+    /// This unbounded loop does not guarantee fairness or completion under
+    /// sustained contention.
     ///
     /// # Parameters
     ///

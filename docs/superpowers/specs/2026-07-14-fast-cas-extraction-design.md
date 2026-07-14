@@ -8,7 +8,8 @@ lightweight CAS executor out of `qubit-cas`, change its state word from
 
 ## Architecture
 
-`CasCell` is the lower-level primitive. It owns an `Atomic<u64>` and provides
+`CasCell` is the lower-level primitive. It owns a standard-library `AtomicU64`
+without external runtime dependencies and provides
 load, store, swap, one-shot compare-set, and unbounded functional CAS updates.
 Its update closures may be evaluated repeatedly after conflicts and must not
 perform non-idempotent side effects.
@@ -41,8 +42,8 @@ All state values exposed by these APIs are `u64`.
   from the successful update.
 - `try_update` retries conflicts without an attempt limit but stops immediately
   when the closure returns a business error.
-- Atomic memory ordering is inherited from `qubit_atomic::Atomic<u64>`:
-  Acquire loads, Release stores, and AcqRel successful compare-set operations.
+- Atomic memory ordering is implemented directly: Acquire loads, Release
+  stores, and AcqRel successful compare-set operations with Acquire failures.
 
 ## Compatibility
 

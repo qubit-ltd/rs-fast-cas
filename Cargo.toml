@@ -24,7 +24,3 @@ include = [
 [lib]
 name = "qubit_fast_cas"
 doctest = true
-
-[dependencies]
-qubit-atomic = "0.13"
-
