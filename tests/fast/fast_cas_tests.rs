@@ -14,6 +14,9 @@ use qubit_fast_cas::{
     FastCasState,
 };
 use std::cell::Cell;
+use std::convert::Infallible;
+use std::sync::Arc;
+use std::thread;
 
 type TestDecision = FastCasDecision<u64, &'static str>;
 type TestOperation = fn(u64) -> TestDecision;
@@ -96,6 +99,23 @@ fn test_fast_cas_execute_updates_finishes_and_aborts() {
     assert_eq!(error.into_error(), Some("state"));
 }
 
+/// Verifies that decision operations can mutate ordinary captured state.
+#[test]
+fn test_fast_cas_execute_accepts_fn_mut() {
+    let state = FastCasState::new(0);
+    let mut calls = 0;
+
+    let success = FastCas::once()
+        .execute(&state, |current| {
+            calls += 1;
+            FastCasDecision::<u64, Infallible>::update(current + 1, calls)
+        })
+        .expect("mutable operation should succeed");
+
+    assert_eq!(calls, 1);
+    assert_eq!(success.into_output(), 1);
+}
+
 #[test]
 fn test_fast_cas_update_by_updates_or_aborts() {
     let state = FastCasState::new(2);
@@ -115,6 +135,23 @@ fn test_fast_cas_update_by_updates_or_aborts() {
         .expect_err("operation should abort");
     assert_eq!(error.current(), 4);
     assert_eq!(error.into_error(), Some("bad"));
+}
+
+/// Verifies that compact update operations can mutate ordinary captured state.
+#[test]
+fn test_fast_cas_update_by_accepts_fn_mut() {
+    let state = FastCasState::new(5);
+    let mut calls = 0;
+
+    let success = FastCas::once()
+        .update_by(&state, |current| {
+            calls += 1;
+            Ok::<(u64, u64), Infallible>((current + 1, calls))
+        })
+        .expect("mutable update operation should succeed");
+
+    assert_eq!(calls, 1);
+    assert_eq!(success.into_output(), 1);
 }
 
 #[test]
@@ -256,4 +293,44 @@ fn test_fast_cas_execute_contention_paths() {
     assert_eq!(success.previous(), 2);
     assert_eq!(success.current(), 3);
     assert_eq!(success.attempts(), 3);
+}
+
+/// Verifies that bounded policies preserve all updates under real contention.
+#[test]
+fn test_fast_cas_updates_shared_state_across_threads() {
+    const THREAD_COUNT: usize = 4;
+    const UPDATES_PER_THREAD: u64 = 2_000;
+
+    let state = Arc::new(FastCasState::new(0));
+    let mut workers = Vec::with_capacity(THREAD_COUNT);
+    for _ in 0..THREAD_COUNT {
+        let state = Arc::clone(&state);
+        workers.push(thread::spawn(move || {
+            let cas = FastCas::spin_yield(8, 64);
+            for _ in 0..UPDATES_PER_THREAD {
+                loop {
+                    match cas.update_by(state.as_ref(), |current| {
+                        Ok::<(u64, ()), Infallible>((current + 1, ()))
+                    }) {
+                        Ok(_) => break,
+                        Err(FastCasError::Conflict { .. }) => {
+                            thread::yield_now();
+                        }
+                        Err(FastCasError::Abort { error, .. }) => {
+                            match error {}
+                        }
+                    }
+                }
+            }
+        }));
+    }
+    for worker in workers {
+        worker.join().expect("contention worker should finish");
+    }
+
+    assert_eq!(
+        state.load(),
+        u64::try_from(THREAD_COUNT).expect("thread count should fit u64")
+            * UPDATES_PER_THREAD
+    );
 }

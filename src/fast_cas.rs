@@ -215,10 +215,10 @@ impl FastCas {
     pub fn execute<R, E, F>(
         &self,
         state: &FastCasState,
-        operation: F,
+        mut operation: F,
     ) -> Result<FastCasSuccess<R>, FastCasError<E>>
     where
-        F: Fn(u64) -> FastCasDecision<R, E>,
+        F: FnMut(u64) -> FastCasDecision<R, E>,
     {
         let max_attempts = self.policy.max_attempts();
         let mut attempts = 1;
@@ -300,10 +300,10 @@ impl FastCas {
     pub fn update_by<R, E, F>(
         &self,
         state: &FastCasState,
-        operation: F,
+        mut operation: F,
     ) -> Result<FastCasSuccess<R>, FastCasError<E>>
     where
-        F: Fn(u64) -> Result<(u64, R), E>,
+        F: FnMut(u64) -> Result<(u64, R), E>,
     {
         self.execute(state, |current| match operation(current) {
             Ok((next, output)) => FastCasDecision::update(next, output),

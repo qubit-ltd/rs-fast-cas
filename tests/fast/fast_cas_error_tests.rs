@@ -6,6 +6,9 @@
 //    Licensed under the Apache License, Version 2.0.
 // =============================================================================
 
+use std::error::Error;
+use std::io;
+
 use qubit_fast_cas::{
     FastCas,
     FastCasDecision,
@@ -19,6 +22,9 @@ type TestOperation = fn(u64) -> TestDecision;
 fn abort_stop(_current: u64) -> TestDecision {
     FastCasDecision::abort("stop")
 }
+
+/// Requires `T` to implement the standard error trait.
+fn assert_std_error<T: Error>() {}
 
 #[test]
 fn test_fast_cas_error_accessors_for_abort() {
@@ -49,4 +55,38 @@ fn test_fast_cas_error_accessors_for_conflict() {
     assert!(error.is_conflict());
     assert_eq!(error.error(), None);
     assert_eq!(error.into_error(), None);
+}
+
+/// Verifies abort failures format their context and expose the business cause.
+#[test]
+fn test_fast_cas_error_abort_implements_error() {
+    assert_std_error::<FastCasError<io::Error>>();
+    let error = FastCasError::Abort {
+        current: 4,
+        error: io::Error::other("stop"),
+        attempts: 2,
+    };
+
+    assert_eq!(
+        error.to_string(),
+        "fast CAS operation aborted after 2 attempts at state 4: stop"
+    );
+    let source = error.source().expect("abort should expose its cause");
+    assert_eq!(source.to_string(), "stop");
+}
+
+/// Verifies conflict failures format their context without a source error.
+#[test]
+fn test_fast_cas_error_conflict_implements_error() {
+    assert_std_error::<FastCasError<io::Error>>();
+    let error = FastCasError::<io::Error>::Conflict {
+        current: 9,
+        attempts: 3,
+    };
+
+    assert_eq!(
+        error.to_string(),
+        "fast CAS operation exhausted its retry policy after 3 attempts; latest state is 9"
+    );
+    assert!(error.source().is_none());
 }

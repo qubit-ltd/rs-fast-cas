@@ -7,6 +7,9 @@
 // =============================================================================
 //! Terminal fast compare-and-swap failures.
 
+use std::error::Error;
+use std::fmt;
+
 /// Terminal [`crate::FastCas`] failure.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum FastCasError<E> {
@@ -95,6 +98,42 @@ impl<E> FastCasError<E> {
     /// `Some(error)` for abort failures, or `None` for conflict failures.
     #[inline]
     pub fn into_error(self) -> Option<E> {
+        match self {
+            Self::Abort { error, .. } => Some(error),
+            Self::Conflict { .. } => None,
+        }
+    }
+}
+
+impl<E> fmt::Display for FastCasError<E>
+where
+    E: fmt::Display,
+{
+    /// Formats the terminal failure with its observed state and attempt count.
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Abort {
+                current,
+                error,
+                attempts,
+            } => write!(
+                formatter,
+                "fast CAS operation aborted after {attempts} attempts at state {current}: {error}",
+            ),
+            Self::Conflict { current, attempts } => write!(
+                formatter,
+                "fast CAS operation exhausted its retry policy after {attempts} attempts; latest state is {current}",
+            ),
+        }
+    }
+}
+
+impl<E> Error for FastCasError<E>
+where
+    E: Error + 'static,
+{
+    /// Returns the business error that caused an abort, when present.
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Abort { error, .. } => Some(error),
             Self::Conflict { .. } => None,
