@@ -1,0 +1,30 @@
+[package]
+name = "qubit-fast-cas"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+authors = ["Haixing Hu <starfish.hu@gmail.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/qubit-ltd/rs-fast-cas"
+description = "Lightweight u64 compare-and-swap cells and retry-aware execution"
+homepage = "https://github.com/qubit-ltd/rs-fast-cas"
+documentation = "https://docs.rs/qubit-fast-cas"
+readme = "README.md"
+keywords = ["cas", "atomic", "lock-free", "concurrency", "qubit"]
+categories = ["concurrency", "data-structures"]
+include = [
+    "/Cargo.toml",
+    "/LICENSE",
+    "/README.md",
+    "/README.zh_CN.md",
+    "/src/**",
+    "/tests/**",
+]
+
+[lib]
+name = "qubit_fast_cas"
+doctest = true
+
+[dependencies]
+qubit-atomic = "0.13"
+
