@@ -17,7 +17,7 @@
 
 ```toml
 [dependencies]
-qubit-fast-cas = "0.1"
+qubit-fast-cas = "0.2"
 ```
 
 ## CasCell
