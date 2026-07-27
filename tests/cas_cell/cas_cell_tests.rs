@@ -6,78 +6,98 @@
 //    Licensed under the Apache License, Version 2.0.
 // =============================================================================
 
-use std::sync::{
-    Arc,
-    Barrier,
-};
-use std::thread;
-
 use qubit_fast_cas::CasCell;
+use std::convert::Infallible;
 
-/// Verifies the primitive atomic operations and the full `u64` range.
 #[test]
-fn test_cas_cell_primitive_operations_support_u64() {
-    let cell = CasCell::new(u64::MAX - 1);
+fn test_cas_cell_default_initializes_to_zero() {
+    let cell = CasCell::default();
 
-    assert_eq!(cell.load(), u64::MAX - 1);
-    assert!(cell.compare_set(u64::MAX - 1, u64::MAX).is_ok());
-    assert_eq!(cell.swap(7), u64::MAX);
-    assert_eq!(cell.load(), 7);
-    cell.store(9);
-    assert_eq!(cell.load(), 9);
-    assert_eq!(cell.compare_set(8, 10), Err(9));
+    assert_eq!(cell.load(), 0);
 }
 
-/// Verifies that `update` returns output from the committed transition.
 #[test]
-fn test_cas_cell_update_commits_state_and_returns_output() {
-    let cell = CasCell::new(4);
+fn test_cas_cell_load_store_swap_and_compare_set() {
+    let cell = CasCell::new(1);
 
-    let output = cell.update(|current| (current + 3, current * 2));
+    assert_eq!(cell.load(), 1);
 
-    assert_eq!(cell.load(), 7);
-    assert_eq!(output, 8);
+    cell.store(2);
+    assert_eq!(cell.load(), 2);
+
+    assert_eq!(cell.swap(3), 2);
+    assert_eq!(cell.load(), 3);
+
+    assert_eq!(cell.compare_set(2, 4), Err(3));
+    assert_eq!(cell.load(), 3);
+
+    assert_eq!(cell.compare_set(3, 4), Ok(()));
+    assert_eq!(cell.load(), 4);
 }
 
-/// Verifies that business rejection leaves the state unchanged.
 #[test]
-fn test_cas_cell_try_update_rejects_without_mutation() {
-    let cell = CasCell::new(5);
+fn test_cas_cell_update_returns_committed_output() {
+    let cell = CasCell::new(10);
 
-    let result =
-        cell.try_update(|_current| Err::<(u64, ()), &'static str>("rejected"));
+    let output = cell.update(|current| (current + 5, current * 2));
 
-    assert_eq!(result, Err("rejected"));
-    assert_eq!(cell.load(), 5);
+    assert_eq!(output, 20);
+    assert_eq!(cell.load(), 15);
 }
 
-/// Verifies that a lost CAS is retried against the newly observed state.
 #[test]
 fn test_cas_cell_update_retries_after_conflict() {
-    let cell = Arc::new(CasCell::new(0));
-    let before_store = Arc::new(Barrier::new(2));
-    let after_store = Arc::new(Barrier::new(2));
-    let worker_cell = Arc::clone(&cell);
-    let worker_before_store = Arc::clone(&before_store);
-    let worker_after_store = Arc::clone(&after_store);
-    let worker = thread::spawn(move || {
-        worker_before_store.wait();
-        worker_cell.store(10);
-        worker_after_store.wait();
-    });
-    let mut attempts = 0;
+    let cell = CasCell::new(0);
+    let mut calls = 0;
 
     let output = cell.update(|current| {
-        attempts += 1;
-        if attempts == 1 {
-            before_store.wait();
-            after_store.wait();
+        calls += 1;
+        if current == 0 {
+            cell.store(10);
+            (1, "stale")
+        } else {
+            (current + 1, "committed")
         }
-        (current + 1, current)
     });
 
-    worker.join().expect("conflict worker should finish");
-    assert_eq!(attempts, 2);
-    assert_eq!(output, 10);
+    assert_eq!(calls, 2);
+    assert_eq!(output, "committed");
     assert_eq!(cell.load(), 11);
+}
+
+#[test]
+fn test_cas_cell_try_update_returns_business_error_without_state_change() {
+    let cell = CasCell::new(7);
+
+    let error = cell
+        .try_update(|current| {
+            assert_eq!(current, 7);
+            Err::<(u64, ()), _>("reject")
+        })
+        .expect_err("business error should stop update");
+
+    assert_eq!(error, "reject");
+    assert_eq!(cell.load(), 7);
+}
+
+#[test]
+fn test_cas_cell_try_update_retries_after_conflict() {
+    let cell = CasCell::new(5);
+    let mut calls = 0;
+
+    let output = cell
+        .try_update(|current| {
+            calls += 1;
+            if current == 5 {
+                cell.store(20);
+                Ok::<(u64, u64), Infallible>((6, current))
+            } else {
+                Ok((current + 2, current))
+            }
+        })
+        .expect("retry should eventually commit");
+
+    assert_eq!(calls, 2);
+    assert_eq!(output, 20);
+    assert_eq!(cell.load(), 22);
 }
