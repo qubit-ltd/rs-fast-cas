@@ -17,7 +17,7 @@ metadata without allocation, hooks, or execution reports.
 
 ```toml
 [dependencies]
-qubit-fast-cas = "0.2"
+qubit-fast-cas = "0.3"
 ```
 
 ## CasCell
