@@ -6,11 +6,9 @@
 //    Licensed under the Apache License, Version 2.0.
 // =============================================================================
 
-use qubit_fast_cas::{
-    FastCas,
-    FastCasDecision,
-    FastCasState,
-};
+use qubit_fast_cas::FastCas;
+use qubit_fast_cas::FastCasDecision;
+use qubit_fast_cas::FastCasState;
 
 type TestDecision = FastCasDecision<u64, &'static str>;
 type TestOperation = fn(u64) -> TestDecision;

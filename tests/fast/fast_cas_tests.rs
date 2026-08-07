@@ -6,17 +6,16 @@
 //    Licensed under the Apache License, Version 2.0.
 // =============================================================================
 
-use qubit_fast_cas::{
-    FastCas,
-    FastCasDecision,
-    FastCasError,
-    FastCasPolicy,
-    FastCasState,
-};
 use std::cell::Cell;
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::thread;
+
+use qubit_fast_cas::FastCas;
+use qubit_fast_cas::FastCasDecision;
+use qubit_fast_cas::FastCasError;
+use qubit_fast_cas::FastCasPolicy;
+use qubit_fast_cas::FastCasState;
 
 type TestDecision = FastCasDecision<u64, &'static str>;
 type TestOperation = fn(u64) -> TestDecision;

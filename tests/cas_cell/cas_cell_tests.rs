@@ -6,8 +6,9 @@
 //    Licensed under the Apache License, Version 2.0.
 // =============================================================================
 
-use qubit_fast_cas::CasCell;
 use std::convert::Infallible;
+
+use qubit_fast_cas::CasCell;
 
 #[test]
 fn test_cas_cell_default_initializes_to_zero() {

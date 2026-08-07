@@ -8,10 +8,8 @@
 //! An atomic `u64` cell with functional compare-and-swap updates.
 
 use std::convert::Infallible;
-use std::sync::atomic::{
-    AtomicU64,
-    Ordering,
-};
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
 
 /// An atomic `u64` cell with reusable compare-and-swap update loops.
 ///

@@ -9,28 +9,20 @@
 use std::convert::Infallible;
 use std::hint::black_box;
 use std::sync::Barrier;
-use std::sync::atomic::{
-    AtomicU64,
-    Ordering,
-};
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
 use std::thread;
-use std::time::{
-    Duration,
-    Instant,
-};
+use std::time::Duration;
+use std::time::Instant;
 
-use criterion::{
-    BenchmarkId,
-    Criterion,
-    Throughput,
-    criterion_group,
-    criterion_main,
-};
-use qubit_fast_cas::{
-    FastCas,
-    FastCasError,
-    FastCasState,
-};
+use criterion::BenchmarkId;
+use criterion::Criterion;
+use criterion::Throughput;
+use criterion::criterion_group;
+use criterion::criterion_main;
+use qubit_fast_cas::FastCas;
+use qubit_fast_cas::FastCasError;
+use qubit_fast_cas::FastCasState;
 
 /// Number of successful updates completed by each worker in one measured
 /// contention iteration.

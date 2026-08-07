@@ -9,12 +9,10 @@
 use std::error::Error;
 use std::io;
 
-use qubit_fast_cas::{
-    FastCas,
-    FastCasDecision,
-    FastCasError,
-    FastCasState,
-};
+use qubit_fast_cas::FastCas;
+use qubit_fast_cas::FastCasDecision;
+use qubit_fast_cas::FastCasError;
+use qubit_fast_cas::FastCasState;
 
 type TestDecision = FastCasDecision<u64, &'static str>;
 type TestOperation = fn(u64) -> TestDecision;

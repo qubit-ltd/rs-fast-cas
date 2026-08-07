@@ -11,13 +11,11 @@ use std::convert::Infallible;
 use std::hint::spin_loop;
 use std::thread;
 
-use super::{
-    FastCasDecision,
-    FastCasError,
-    FastCasPolicy,
-    FastCasState,
-    FastCasSuccess,
-};
+use super::FastCasDecision;
+use super::FastCasError;
+use super::FastCasPolicy;
+use super::FastCasState;
+use super::FastCasSuccess;
 
 /// Policy-driven compare-and-swap executor for `u64` state codes.
 ///
