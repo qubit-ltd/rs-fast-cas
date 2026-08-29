@@ -40,12 +40,7 @@ impl<R> FastCasSuccess<R> {
     /// # Returns
     /// A successful update result value.
     #[inline]
-    pub(crate) const fn updated(
-        previous: u64,
-        current: u64,
-        output: R,
-        attempts: u32,
-    ) -> Self {
+    pub(crate) const fn updated(previous: u64, current: u64, output: R, attempts: u32) -> Self {
         Self {
             previous,
             current,
@@ -65,11 +60,7 @@ impl<R> FastCasSuccess<R> {
     /// # Returns
     /// A successful finish result value.
     #[inline]
-    pub(crate) const fn finished(
-        current: u64,
-        output: R,
-        attempts: u32,
-    ) -> Self {
+    pub(crate) const fn finished(current: u64, output: R, attempts: u32) -> Self {
         Self {
             previous: current,
             current,

@@ -97,12 +97,7 @@ impl CasCell {
     #[inline]
     pub fn compare_set(&self, expected: u64, next: u64) -> Result<(), u64> {
         self.state
-            .compare_exchange(
-                expected,
-                next,
-                Ordering::AcqRel,
-                Ordering::Acquire,
-            )
+            .compare_exchange(expected, next, Ordering::AcqRel, Ordering::Acquire)
             .map(|_| ())
     }
 
@@ -128,9 +123,7 @@ impl CasCell {
     where
         F: FnMut(u64) -> (u64, R),
     {
-        match self.try_update(|current| {
-            Ok::<(u64, R), Infallible>(operation(current))
-        }) {
+        match self.try_update(|current| Ok::<(u64, R), Infallible>(operation(current))) {
             Ok(output) => output,
             Err(error) => match error {},
         }

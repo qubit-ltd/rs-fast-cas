@@ -57,10 +57,7 @@ fn benchmark_uncontended(c: &mut Criterion) {
             b.iter(|| {
                 let success = cas
                     .update_by(&state, |current| {
-                        Ok::<(u64, u64), Infallible>((
-                            current.wrapping_add(1),
-                            current,
-                        ))
+                        Ok::<(u64, u64), Infallible>((current.wrapping_add(1), current))
                     })
                     .expect("uncontended update should not conflict");
                 black_box(success.into_output())
@@ -74,39 +71,19 @@ fn benchmark_uncontended(c: &mut Criterion) {
 fn benchmark_contended(c: &mut Criterion) {
     let mut group = c.benchmark_group("contended");
     for thread_count in [2usize, 4, 8] {
-        let thread_count_u64 =
-            u64::try_from(thread_count).expect("thread count should fit u64");
-        group.throughput(Throughput::Elements(
-            OPERATIONS_PER_THREAD * thread_count_u64,
-        ));
+        let thread_count_u64 = u64::try_from(thread_count).expect("thread count should fit u64");
+        group.throughput(Throughput::Elements(OPERATIONS_PER_THREAD * thread_count_u64));
         group.bench_with_input(
             BenchmarkId::new("atomic_u64", thread_count),
             &thread_count,
             |b, &threads| {
-                b.iter_custom(|iterations| {
-                    run_atomic_workload(
-                        threads,
-                        OPERATIONS_PER_THREAD,
-                        iterations,
-                    )
-                });
+                b.iter_custom(|iterations| run_atomic_workload(threads, OPERATIONS_PER_THREAD, iterations));
             },
         );
         for (name, cas) in fast_cas_policies() {
-            group.bench_with_input(
-                BenchmarkId::new(name, thread_count),
-                &thread_count,
-                |b, &threads| {
-                    b.iter_custom(|iterations| {
-                        run_fast_cas_workload(
-                            cas,
-                            threads,
-                            OPERATIONS_PER_THREAD,
-                            iterations,
-                        )
-                    });
-                },
-            );
+            group.bench_with_input(BenchmarkId::new(name, thread_count), &thread_count, |b, &threads| {
+                b.iter_custom(|iterations| run_fast_cas_workload(cas, threads, OPERATIONS_PER_THREAD, iterations));
+            });
         }
     }
     group.finish();
@@ -122,11 +99,7 @@ fn fast_cas_policies() -> [(&'static str, FastCas); 3] {
 }
 
 /// Runs a direct `AtomicU64` workload and returns only its measured duration.
-fn run_atomic_workload(
-    thread_count: usize,
-    operations_per_thread: u64,
-    iterations: u64,
-) -> Duration {
+fn run_atomic_workload(thread_count: usize, operations_per_thread: u64, iterations: u64) -> Duration {
     let state = AtomicU64::new(0);
     run_workers(thread_count, || {
         let state = &state;
@@ -142,12 +115,7 @@ fn run_atomic_workload(
 }
 
 /// Runs a policy-driven workload and retries whole operations after conflicts.
-fn run_fast_cas_workload(
-    cas: FastCas,
-    thread_count: usize,
-    operations_per_thread: u64,
-    iterations: u64,
-) -> Duration {
+fn run_fast_cas_workload(cas: FastCas, thread_count: usize, operations_per_thread: u64, iterations: u64) -> Duration {
     let state = FastCasState::new(0);
     run_workers(thread_count, || {
         let state = &state;
@@ -158,19 +126,14 @@ fn run_fast_cas_workload(
             for _ in 0..total_operations {
                 loop {
                     match cas.update_by(state, |current| {
-                        Ok::<(u64, ()), Infallible>((
-                            current.wrapping_add(1),
-                            (),
-                        ))
+                        Ok::<(u64, ()), Infallible>((current.wrapping_add(1), ()))
                     }) {
                         Ok(success) => {
                             black_box(success);
                             break;
                         }
                         Err(FastCasError::Conflict { .. }) => {}
-                        Err(FastCasError::Abort { error, .. }) => {
-                            match error {}
-                        }
+                        Err(FastCasError::Abort { error, .. }) => match error {},
                     }
                 }
             }

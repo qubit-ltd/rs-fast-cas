@@ -88,9 +88,7 @@ impl FastCasPolicy {
         match self {
             Self::Once => 1,
             Self::Spin { max_attempts } => normalize_attempts(max_attempts),
-            Self::SpinYield { max_attempts, .. } => {
-                normalize_attempts(max_attempts)
-            }
+            Self::SpinYield { max_attempts, .. } => normalize_attempts(max_attempts),
         }
     }
 
@@ -104,9 +102,7 @@ impl FastCasPolicy {
     #[inline]
     pub const fn should_yield_before(self, next_attempt: u32) -> bool {
         match self {
-            Self::SpinYield { spin_attempts, .. } => {
-                next_attempt > spin_attempts
-            }
+            Self::SpinYield { spin_attempts, .. } => next_attempt > spin_attempts,
             Self::Once | Self::Spin { .. } => false,
         }
     }

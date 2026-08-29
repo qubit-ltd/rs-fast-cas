@@ -219,11 +219,7 @@ impl FastCas {
     /// assert_eq!(*ok.output(), "first");
     /// ```
     #[inline(always)]
-    pub fn execute<R, E, F>(
-        &self,
-        state: &FastCasState,
-        mut operation: F,
-    ) -> Result<FastCasSuccess<R>, FastCasError<E>>
+    pub fn execute<R, E, F>(&self, state: &FastCasState, mut operation: F) -> Result<FastCasSuccess<R>, FastCasError<E>>
     where
         F: FnMut(u64) -> FastCasDecision<R, E>,
     {
@@ -232,26 +228,20 @@ impl FastCas {
         loop {
             let current = state.load();
             match operation(current) {
-                FastCasDecision::Update { next, output } => {
-                    match state.compare_set(current, next) {
-                        Ok(()) => {
-                            return Ok(FastCasSuccess::updated(
-                                current, next, output, attempts,
-                            ));
-                        }
-                        Err(actual) if attempts >= max_attempts => {
-                            return Err(FastCasError::Conflict {
-                                current: actual,
-                                attempts,
-                            });
-                        }
-                        Err(_) => {}
+                FastCasDecision::Update { next, output } => match state.compare_set(current, next) {
+                    Ok(()) => {
+                        return Ok(FastCasSuccess::updated(current, next, output, attempts));
                     }
-                }
+                    Err(actual) if attempts >= max_attempts => {
+                        return Err(FastCasError::Conflict {
+                            current: actual,
+                            attempts,
+                        });
+                    }
+                    Err(_) => {}
+                },
                 FastCasDecision::Finish { output } => {
-                    return Ok(FastCasSuccess::finished(
-                        current, output, attempts,
-                    ));
+                    return Ok(FastCasSuccess::finished(current, output, attempts));
                 }
                 FastCasDecision::Abort { error } => {
                     return Err(FastCasError::Abort {

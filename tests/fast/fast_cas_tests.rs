@@ -44,10 +44,7 @@ fn reject_update(_current: u64) -> Result<(u64, u64), &'static str> {
 #[test]
 fn test_fast_cas_constructors_and_policy_accessor() {
     assert_eq!(FastCas::once().policy(), FastCasPolicy::Once);
-    assert_eq!(
-        FastCas::spin(3).policy(),
-        FastCasPolicy::Spin { max_attempts: 3 }
-    );
+    assert_eq!(FastCas::spin(3).policy(), FastCasPolicy::Spin { max_attempts: 3 });
     assert_eq!(
         FastCas::spin_yield(1, 3).policy(),
         FastCasPolicy::SpinYield {
@@ -68,25 +65,19 @@ fn test_fast_cas_execute_updates_finishes_and_aborts() {
     let cas = FastCas::once();
 
     let increment: TestOperation = increment;
-    let success = cas
-        .execute(&state, increment)
-        .expect("update should succeed");
+    let success = cas.execute(&state, increment).expect("update should succeed");
     assert_eq!(success.previous(), 0);
     assert_eq!(success.current(), 1);
     assert_eq!(success.into_output(), 1);
     assert_eq!(state.load(), 1);
 
     let finish_current: TestOperation = finish_current;
-    let finished = cas
-        .execute(&state, finish_current)
-        .expect("finish should succeed");
+    let finished = cas.execute(&state, finish_current).expect("finish should succeed");
     assert_eq!(finished.previous(), 1);
     assert_eq!(finished.current(), 1);
 
     let abort_state: TestOperation = abort_state;
-    let error = cas
-        .execute(&state, abort_state)
-        .expect_err("abort should fail");
+    let error = cas.execute(&state, abort_state).expect_err("abort should fail");
     assert!(matches!(
         error,
         FastCasError::Abort {
@@ -121,9 +112,7 @@ fn test_fast_cas_update_by_updates_or_aborts() {
     let cas = FastCas::once();
 
     let add_two: TestUpdateOperation = add_two;
-    let success = cas
-        .update_by(&state, add_two)
-        .expect("update should succeed");
+    let success = cas.update_by(&state, add_two).expect("update should succeed");
     assert_eq!(success.previous(), 2);
     assert_eq!(success.current(), 4);
     assert_eq!(success.into_output(), 4);
@@ -164,9 +153,7 @@ fn test_fast_cas_compare_update_requires_expected_state() {
     assert_eq!(wrong.current(), 3);
     assert_eq!(wrong.attempts(), 1);
 
-    let success = cas
-        .compare_update(&state, 3, 4)
-        .expect("expected state should update");
+    let success = cas.compare_update(&state, 3, 4).expect("expected state should update");
     assert_eq!(success.previous(), 3);
     assert_eq!(success.current(), 4);
     assert_eq!(success.into_output(), ());
@@ -178,9 +165,7 @@ fn test_fast_cas_compare_update_with_runs_output_after_success() {
     let cas = FastCas::once();
 
     let success = cas
-        .compare_update_with(&state, 10, 11, |previous, current| {
-            current - previous
-        })
+        .compare_update_with(&state, 10, 11, |previous, current| current - previous)
         .expect("expected state should update");
 
     assert_eq!(success.previous(), 10);
@@ -308,16 +293,12 @@ fn test_fast_cas_updates_shared_state_across_threads() {
             let cas = FastCas::spin_yield(8, 64);
             for _ in 0..UPDATES_PER_THREAD {
                 loop {
-                    match cas.update_by(state.as_ref(), |current| {
-                        Ok::<(u64, ()), Infallible>((current + 1, ()))
-                    }) {
+                    match cas.update_by(state.as_ref(), |current| Ok::<(u64, ()), Infallible>((current + 1, ()))) {
                         Ok(_) => break,
                         Err(FastCasError::Conflict { .. }) => {
                             thread::yield_now();
                         }
-                        Err(FastCasError::Abort { error, .. }) => {
-                            match error {}
-                        }
+                        Err(FastCasError::Abort { error, .. }) => match error {},
                     }
                 }
             }
@@ -329,7 +310,6 @@ fn test_fast_cas_updates_shared_state_across_threads() {
 
     assert_eq!(
         state.load(),
-        u64::try_from(THREAD_COUNT).expect("thread count should fit u64")
-            * UPDATES_PER_THREAD
+        u64::try_from(THREAD_COUNT).expect("thread count should fit u64") * UPDATES_PER_THREAD
     );
 }

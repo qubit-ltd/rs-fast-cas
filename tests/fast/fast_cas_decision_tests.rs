@@ -12,10 +12,7 @@ use qubit_fast_cas::FastCasDecision;
 fn test_fast_cas_decision_constructors_create_variants() {
     assert_eq!(
         FastCasDecision::<_, &'static str>::update(2, "ok"),
-        FastCasDecision::Update {
-            next: 2,
-            output: "ok"
-        }
+        FastCasDecision::Update { next: 2, output: "ok" }
     );
     assert_eq!(
         FastCasDecision::<_, &'static str>::finish("done"),

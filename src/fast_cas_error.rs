@@ -43,9 +43,7 @@ impl<E> FastCasError<E> {
     #[inline]
     pub const fn current(&self) -> u64 {
         match self {
-            Self::Abort { current, .. } | Self::Conflict { current, .. } => {
-                *current
-            }
+            Self::Abort { current, .. } | Self::Conflict { current, .. } => *current,
         }
     }
 
@@ -56,9 +54,7 @@ impl<E> FastCasError<E> {
     #[inline]
     pub const fn attempts(&self) -> u32 {
         match self {
-            Self::Abort { attempts, .. } | Self::Conflict { attempts, .. } => {
-                *attempts
-            }
+            Self::Abort { attempts, .. } | Self::Conflict { attempts, .. } => *attempts,
         }
     }
 
