@@ -6,7 +6,7 @@
 
 **Architecture:** `CasCell` will directly own `AtomicU64` with the existing Acquire/Release/AcqRel contract. `FastCas` keeps the current public result and policy types while accepting `FnMut`; performance-only changes are retained only when Criterion measurements satisfy the approved threshold.
 
-**Tech Stack:** Rust 2024, standard-library atomics, Criterion benchmarks, Cargo integration tests, rs-ci.
+**Tech Stack:** Rust 2024, standard-library atomics, Criterion benchmarks, Cargo integration tests, rs-infra.
 
 ## Global Constraints
 
@@ -15,7 +15,7 @@
 - Preserve all public state values as `u64` and memory ordering as Acquire/Release/AcqRel.
 - Keep tests under `tests/`; do not add inline test modules.
 - Document ABA, retry liveness/fairness, stale observations, and repeated closure evaluation.
-- Use `align-ci.sh` and the canonical rs-ci commands for formatting.
+- Use `align-ci.sh` and the canonical rs-infra commands for formatting.
 - Do not commit, push, rewrite history, or disturb existing local commits.
 - Retain `spin_loop()` only if contention improves stably and uncontended performance regresses by no more than 5%.
 - Retain `#[inline(always)]` only if isolated benchmark evidence justifies it.
@@ -123,7 +123,7 @@
 - Modify mechanically as needed by: `align-ci.sh`
 
 **Interfaces:**
-- Produces a clean rs-ci run and a verified crates.io package without publishing it.
+- Produces a clean rs-infra run and a verified crates.io package without publishing it.
 
 - [x] Run `./align-ci.sh` using the project formatter configuration.
 - [x] Run `./ci-check.sh` and confirm every stage passes.
