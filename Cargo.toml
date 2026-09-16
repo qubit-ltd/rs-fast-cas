@@ -28,7 +28,7 @@ name = "qubit_fast_cas"
 doctest = true
 
 [dev-dependencies]
-criterion = "0.8"
+criterion = "^0.8"
 
 [[bench]]
 name = "fast_cas_bench"
