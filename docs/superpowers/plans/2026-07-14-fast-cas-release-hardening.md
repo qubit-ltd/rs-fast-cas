@@ -125,8 +125,8 @@
 **Interfaces:**
 - Produces a clean rs-infra run and a verified crates.io package without publishing it.
 
-- [x] Run `./align-ci.sh` using the project formatter configuration.
-- [x] Run `./ci-check.sh` and confirm every stage passes.
+- [x] Run `./.infra/bin/align-ci.sh` using the project formatter configuration.
+- [x] Run `./.infra/bin/ci-check.sh` and confirm every stage passes.
 - [x] Run `cargo publish --dry-run`.
 - [x] Inspect `git status --short`, `git diff --check`, the package file list, and the final normal dependency tree.
 
