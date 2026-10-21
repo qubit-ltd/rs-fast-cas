@@ -11,6 +11,20 @@
 ///
 /// The operation may be called multiple times when CAS conflicts happen, so it
 /// should be deterministic and free of non-idempotent side effects.
+///
+/// # Type Parameters
+/// - `R`: Business output returned when the operation succeeds.
+/// - `E`: Business error returned when the operation aborts.
+///
+/// # Examples
+///
+/// ```
+/// use qubit_fast_cas::FastCasDecision;
+///
+/// let decision = FastCasDecision::<&str, ()>::update(2, "done");
+/// assert!(matches!(decision, FastCasDecision::Update { next: 2, output: "done" }));
+/// ```
+#[must_use]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum FastCasDecision<R, E> {
     /// Replace the current state with `next` and return `output` after the CAS

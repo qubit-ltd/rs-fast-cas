@@ -22,6 +22,18 @@ use std::sync::atomic::Ordering;
 /// the current `u64` value and do not detect ABA changes; callers that must
 /// detect an intermediate change should encode a generation counter in the
 /// state word.
+///
+/// # Examples
+///
+/// ```
+/// use qubit_fast_cas::CasCell;
+///
+/// let cell = CasCell::new(1);
+/// let previous = cell.update(|current| (current + 1, current));
+///
+/// assert_eq!(previous, 1);
+/// assert_eq!(cell.load(), 2);
+/// ```
 #[derive(Debug, Default)]
 #[repr(transparent)]
 pub struct CasCell {
@@ -51,6 +63,7 @@ impl CasCell {
     /// # Returns
     ///
     /// The currently stored value.
+    #[must_use]
     #[inline]
     pub fn load(&self) -> u64 {
         self.state.load(Ordering::Acquire)

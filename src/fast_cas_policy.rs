@@ -7,7 +7,22 @@
 // =============================================================================
 //! Retry policy for fast compare-and-swap operations.
 
-/// Retry policy used by [`crate::FastCas`] when compare-and-swap loses a race.
+/// Controls how [`crate::FastCas`] responds when compare-and-swap loses a race.
+///
+/// The constructors normalize a zero attempt budget to one attempt, and
+/// [`FastCasPolicy::spin_yield`] caps the spin prefix at the total budget.
+///
+/// # Examples
+///
+/// ```
+/// use qubit_fast_cas::FastCasPolicy;
+///
+/// let policy = FastCasPolicy::spin_yield(2, 5);
+/// assert_eq!(policy.max_attempts(), 5);
+/// assert!(!policy.should_yield_before(2));
+/// assert!(policy.should_yield_before(3));
+/// ```
+#[must_use]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum FastCasPolicy {
     /// Try the operation once and return conflict on the first failed CAS.
@@ -83,6 +98,7 @@ impl FastCasPolicy {
     ///
     /// # Returns
     /// A non-zero attempt count.
+    #[must_use]
     #[inline]
     pub const fn max_attempts(self) -> u32 {
         match self {
@@ -99,6 +115,7 @@ impl FastCasPolicy {
     ///
     /// # Returns
     /// `true` when this policy should yield before `next_attempt`.
+    #[must_use]
     #[inline]
     pub const fn should_yield_before(self, next_attempt: u32) -> bool {
         match self {
@@ -115,6 +132,7 @@ impl FastCasPolicy {
 ///
 /// # Returns
 /// `attempts` when non-zero, otherwise `1`.
+#[must_use]
 #[inline]
 const fn normalize_attempts(attempts: u32) -> u32 {
     if attempts == 0 { 1 } else { attempts }

@@ -7,13 +7,33 @@
 // =============================================================================
 //! Successful fast compare-and-swap results.
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-enum FastCasSuccessKind {
-    Updated,
-    Finished,
-}
+mod internal;
 
-/// Successful [`crate::FastCas`] result.
+use internal::FastCasSuccessKind;
+
+/// Successful [`crate::FastCas`] result carrying its state transition and
+/// output.
+///
+/// # Type Parameters
+/// - `R`: Business output produced by the successful operation.
+///
+/// # Examples
+///
+/// ```
+/// use qubit_fast_cas::{FastCas, FastCasDecision, FastCasState};
+///
+/// let state = FastCasState::new(7);
+/// let success = FastCas::once()
+///     .execute(&state, |current| FastCasDecision::<_, ()>::Update {
+///         next: current + 1,
+///         output: "saved",
+///     })
+///     .expect("the update should succeed");
+///
+/// assert_eq!(success.previous(), 7);
+/// assert_eq!(success.current(), 8);
+/// assert_eq!(success.output(), &"saved");
+/// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct FastCasSuccess<R> {
     /// State observed by the successful attempt.

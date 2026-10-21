@@ -11,6 +11,20 @@ use std::error::Error;
 use std::fmt;
 
 /// Terminal [`crate::FastCas`] failure.
+///
+/// # Examples
+///
+/// ```
+/// use qubit_fast_cas::FastCasError;
+///
+/// let error = FastCasError::<&str>::Conflict {
+///     current: 7,
+///     attempts: 3,
+/// };
+/// assert!(error.is_conflict());
+/// assert_eq!(error.current(), 7);
+/// assert_eq!(error.attempts(), 3);
+/// ```
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum FastCasError<E> {
     /// The operation aborted from a user decision.

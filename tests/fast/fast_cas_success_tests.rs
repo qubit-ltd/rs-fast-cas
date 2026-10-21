@@ -47,13 +47,6 @@ fn test_fast_cas_success_accessors_for_update_and_finish() {
     assert!(finished.is_finished());
 }
 
-/// Verifies same-value execute updates are classified by decision path.
-///
-/// # Parameters
-/// This test has no parameters.
-///
-/// # Returns
-/// This test returns nothing.
 #[test]
 fn test_fast_cas_success_same_value_update_is_updated() {
     let state = FastCasState::new(3);
@@ -69,13 +62,6 @@ fn test_fast_cas_success_same_value_update_is_updated() {
     assert!(!success.is_finished());
 }
 
-/// Verifies same-value compare updates are classified as updates.
-///
-/// # Parameters
-/// This test has no parameters.
-///
-/// # Returns
-/// This test returns nothing.
 #[test]
 fn test_fast_cas_success_compare_update_same_value_is_updated() {
     let state = FastCasState::new(5);
