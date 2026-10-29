@@ -12,6 +12,12 @@ use std::fmt;
 
 /// Terminal [`crate::FastCas`] failure.
 ///
+/// `E` is the business error returned when the operation aborts.
+///
+/// # Type Parameters
+///
+/// * `E` - Business error carried by [`Self::Abort`].
+///
 /// # Examples
 ///
 /// ```
@@ -25,6 +31,7 @@ use std::fmt;
 /// assert_eq!(error.current(), 7);
 /// assert_eq!(error.attempts(), 3);
 /// ```
+#[must_use = "terminal compare-and-swap failures should be handled"]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum FastCasError<E> {
     /// The operation aborted from a user decision.
@@ -54,6 +61,7 @@ impl<E> FastCasError<E> {
     ///
     /// # Returns
     /// The observed state code at failure.
+    #[must_use]
     #[inline]
     pub const fn current(&self) -> u64 {
         match self {
@@ -65,6 +73,7 @@ impl<E> FastCasError<E> {
     ///
     /// # Returns
     /// Number of attempts executed by the operation.
+    #[must_use]
     #[inline]
     pub const fn attempts(&self) -> u32 {
         match self {
@@ -76,6 +85,7 @@ impl<E> FastCasError<E> {
     ///
     /// # Returns
     /// `true` for [`FastCasError::Abort`].
+    #[must_use]
     #[inline]
     pub const fn is_abort(&self) -> bool {
         matches!(self, Self::Abort { .. })
@@ -85,6 +95,7 @@ impl<E> FastCasError<E> {
     ///
     /// # Returns
     /// `true` for [`FastCasError::Conflict`].
+    #[must_use]
     #[inline]
     pub const fn is_conflict(&self) -> bool {
         matches!(self, Self::Conflict { .. })
@@ -94,6 +105,7 @@ impl<E> FastCasError<E> {
     ///
     /// # Returns
     /// `Some(error)` for abort failures, or `None` for conflict failures.
+    #[must_use = "check whether this failure contains a business error"]
     #[inline]
     pub const fn error(&self) -> Option<&E> {
         match self {
@@ -106,6 +118,7 @@ impl<E> FastCasError<E> {
     ///
     /// # Returns
     /// `Some(error)` for abort failures, or `None` for conflict failures.
+    #[must_use = "handle the business error when this failure was an abort"]
     #[inline]
     pub fn into_error(self) -> Option<E> {
         match self {
@@ -120,6 +133,9 @@ where
     E: fmt::Display,
 {
     /// Formats the terminal failure with its observed state and attempt count.
+    ///
+    /// # Returns
+    /// The formatting result returned by the formatter.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Abort {
@@ -143,6 +159,9 @@ where
     E: Error + 'static,
 {
     /// Returns the business error that caused an abort, when present.
+    ///
+    /// # Returns
+    /// `Some(error)` for abort failures, or `None` for conflict failures.
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Abort { error, .. } => Some(error),

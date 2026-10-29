@@ -113,6 +113,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// The output produced by the operation.
+    #[must_use = "inspect the business output"]
     #[inline]
     pub const fn output(&self) -> &R {
         &self.output

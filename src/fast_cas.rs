@@ -91,6 +91,7 @@ impl FastCas {
     /// assert_eq!(cas.policy().max_attempts(), 1);
     /// let _state = FastCasState::new(0);
     /// ```
+    #[must_use]
     #[inline]
     pub const fn once() -> Self {
         Self {
@@ -118,6 +119,7 @@ impl FastCas {
     /// let cas = FastCas::spin(64);
     /// assert_eq!(cas.policy().max_attempts(), 64);
     /// ```
+    #[must_use]
     #[inline]
     pub const fn spin(max_attempts: u32) -> Self {
         Self {
@@ -148,6 +150,7 @@ impl FastCas {
     /// let p = cas.policy();
     /// assert_eq!(p.max_attempts(), 128);
     /// ```
+    #[must_use]
     #[inline]
     pub const fn spin_yield(spin_attempts: u32, max_attempts: u32) -> Self {
         Self {
@@ -162,6 +165,7 @@ impl FastCas {
     ///
     /// # Returns
     /// An executor using `policy`.
+    #[must_use]
     #[inline]
     pub const fn with_policy(policy: FastCasPolicy) -> Self {
         Self { policy }
@@ -185,6 +189,11 @@ impl FastCas {
     /// Success and error metadata capture an observation from the terminal
     /// attempt; they are not a promise that the shared state remains unchanged
     /// after this method returns.
+    ///
+    /// # Type Parameters
+    /// - `R`: Business output returned after an update or finish decision.
+    /// - `E`: Business error returned when the operation aborts.
+    /// - `F`: Closure that evaluates a decision for each observed state.
     ///
     /// # Parameters
     /// - `state`: Shared state code.
@@ -268,6 +277,11 @@ impl FastCas {
     ///
     /// This is a thin wrapper over [`Self::execute`]; the same re-entrancy and
     /// conflict-retry rules apply.
+    ///
+    /// # Type Parameters
+    /// - `R`: Business output returned after the update succeeds.
+    /// - `E`: Business error returned when the closure rejects the update.
+    /// - `F`: Closure that computes the next state and output.
     ///
     /// # Parameters
     /// - `state`: Shared state code.
@@ -362,6 +376,10 @@ impl FastCas {
     /// next)` so callers can build messages or metrics without observing stale
     /// races. If the closure panics, the panic propagates after the state has
     /// already been updated.
+    ///
+    /// # Type Parameters
+    /// - `R`: Output produced after the CAS succeeds.
+    /// - `F`: Closure that creates output from the expected and next states.
     ///
     /// # Parameters
     /// - `state`: Shared state code.

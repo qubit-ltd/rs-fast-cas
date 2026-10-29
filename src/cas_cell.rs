@@ -51,6 +51,7 @@ impl CasCell {
     /// # Returns
     ///
     /// A new cell containing `value`.
+    #[must_use]
     #[inline]
     pub fn new(value: u64) -> Self {
         Self {
