@@ -19,4 +19,15 @@ use crate::CasCell;
 /// the former `Atomic<usize>` alias can keep using `load`, `store`, `swap`, and
 /// `compare_set`; other low-level atomic operations should be expressed with
 /// [`CasCell::update`] / [`CasCell::try_update`] or a separately owned atomic.
+///
+/// # Examples
+///
+/// ```
+/// use qubit_fast_cas::FastCasState;
+///
+/// let state = FastCasState::new(1);
+/// assert_eq!(state.load(), 1);
+/// state.store(2);
+/// assert_eq!(state.load(), 2);
+/// ```
 pub type FastCasState = CasCell;

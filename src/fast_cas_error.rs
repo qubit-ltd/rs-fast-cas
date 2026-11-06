@@ -134,6 +134,9 @@ where
 {
     /// Formats the terminal failure with its observed state and attempt count.
     ///
+    /// # Parameters
+    /// `formatter` receives the formatted failure text.
+    ///
     /// # Returns
     /// The formatting result returned by the formatter.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

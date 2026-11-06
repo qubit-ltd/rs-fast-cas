@@ -89,6 +89,7 @@ impl CasCell {
     /// # Returns
     ///
     /// The value stored before the swap.
+    #[must_use]
     #[inline]
     pub fn swap(&self, value: u64) -> u64 {
         self.state.swap(value, Ordering::AcqRel)
@@ -132,6 +133,12 @@ impl CasCell {
     /// # Returns
     ///
     /// The business output from the successfully committed transition.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `R`: Business output returned by the committed transition.
+    /// - `F`: Reusable closure that computes the replacement state and output.
+    #[must_use]
     #[inline]
     pub fn update<R, F>(&self, mut operation: F) -> R
     where
@@ -164,6 +171,13 @@ impl CasCell {
     /// # Errors
     ///
     /// Returns the business error produced by `operation` without retrying it.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `R`: Business output returned by the committed transition.
+    /// - `E`: Business error that stops the transition without retrying.
+    /// - `F`: Reusable closure that computes a fallible replacement state and
+    ///   output.
     #[inline]
     pub fn try_update<R, E, F>(&self, mut operation: F) -> Result<R, E>
     where

@@ -59,6 +59,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// A successful update result value.
+    #[must_use = "use the successful update result"]
     #[inline]
     pub(crate) const fn updated(previous: u64, current: u64, output: R, attempts: u32) -> Self {
         Self {
@@ -79,6 +80,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// A successful finish result value.
+    #[must_use = "use the successful finish result"]
     #[inline]
     pub(crate) const fn finished(current: u64, output: R, attempts: u32) -> Self {
         Self {
@@ -94,6 +96,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// The state code read by the successful attempt.
+    #[must_use]
     #[inline]
     pub const fn previous(&self) -> u64 {
         self.previous
@@ -104,6 +107,7 @@ impl<R> FastCasSuccess<R> {
     /// # Returns
     /// The installed state for updates, or [`previous`](Self::previous) for
     /// finishes.
+    #[must_use]
     #[inline]
     pub const fn current(&self) -> u64 {
         self.current
@@ -123,6 +127,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// The output produced by the operation.
+    #[must_use = "use the returned business output"]
     #[inline]
     pub fn into_output(self) -> R {
         self.output
@@ -132,6 +137,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// Number of attempts executed by the operation.
+    #[must_use]
     #[inline]
     pub const fn attempts(&self) -> u32 {
         self.attempts
@@ -142,6 +148,7 @@ impl<R> FastCasSuccess<R> {
     /// # Returns
     /// `true` when the operation successfully executed an update decision,
     /// even if the installed state equals the previously observed state.
+    #[must_use = "check whether the operation updated the state"]
     #[inline]
     pub const fn is_updated(&self) -> bool {
         matches!(self.kind, FastCasSuccessKind::Updated)
@@ -151,6 +158,7 @@ impl<R> FastCasSuccess<R> {
     ///
     /// # Returns
     /// `true` when the operation completed through a finish decision.
+    #[must_use = "check whether the operation finished without an update"]
     #[inline]
     pub const fn is_finished(&self) -> bool {
         matches!(self.kind, FastCasSuccessKind::Finished)
