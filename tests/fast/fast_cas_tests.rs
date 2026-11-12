@@ -173,6 +173,44 @@ fn test_fast_cas_compare_update_with_runs_output_after_success() {
     assert_eq!(success.into_output(), 1);
 }
 
+#[test]
+fn test_compare_output_consumes_capture() {
+    let state = FastCasState::new(1);
+    let message = String::from("committed");
+    let success = FastCas::once()
+        .compare_update_with(&state, 1, 2, move |_, _| message)
+        .expect("transition should commit");
+    assert_eq!(success.into_output(), "committed");
+}
+
+#[test]
+fn test_compare_output_observes_commit_and_skips_conflict() {
+    let state = FastCasState::new(1);
+    let calls = Cell::new(0);
+    let result = FastCas::once().compare_update_with(&state, 1, 2, |_, _| {
+        calls.set(calls.get() + 1);
+        assert_eq!(state.load(), 2);
+    });
+    assert!(result.is_ok());
+    assert_eq!(calls.get(), 1);
+    let result = FastCas::once().compare_update_with(&state, 1, 3, |_, _| {
+        calls.set(calls.get() + 1);
+    });
+    assert!(result.expect_err("stale expected must conflict").is_conflict());
+    assert_eq!(calls.get(), 1);
+    assert_eq!(state.load(), 2);
+}
+
+#[test]
+fn test_compare_output_panic_keeps_commit() {
+    let state = FastCasState::new(1);
+    let result = std::panic::catch_unwind(|| {
+        let _ = FastCas::once().compare_update_with(&state, 1, 2, |_, _| panic!("output panic"));
+    });
+    assert!(result.is_err());
+    assert_eq!(state.load(), 2);
+}
+
 /// Verifies that fast CAS transitions support the full `u64` state range.
 #[test]
 fn test_fast_cas_compare_update_supports_u64_max() {

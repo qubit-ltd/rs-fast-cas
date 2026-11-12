@@ -102,3 +102,23 @@ fn test_cas_cell_try_update_retries_after_conflict() {
     assert_eq!(output, 20);
     assert_eq!(cell.load(), 22);
 }
+
+#[test]
+fn test_update_panic_does_not_commit() {
+    let cell = CasCell::new(7);
+    let result = std::panic::catch_unwind(|| {
+        let _: () = cell.update(|_| panic!("transition panic"));
+    });
+    assert!(result.is_err());
+    assert_eq!(cell.load(), 7);
+}
+
+#[test]
+fn test_try_update_panic_does_not_commit() {
+    let cell = CasCell::new(7);
+    let result = std::panic::catch_unwind(|| {
+        let _: Result<(), ()> = cell.try_update(|_| panic!("transition panic"));
+    });
+    assert!(result.is_err());
+    assert_eq!(cell.load(), 7);
+}

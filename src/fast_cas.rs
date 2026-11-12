@@ -372,10 +372,10 @@ impl FastCas {
     /// success.
     ///
     /// Same single-CAS semantics as [`Self::compare_update`]. The `output`
-    /// closure runs **only** after a successful CAS; it receives `(expected,
-    /// next)` so callers can build messages or metrics without observing stale
-    /// races. If the closure panics, the panic propagates after the state has
-    /// already been updated.
+    /// closure runs at most once, **only** after a successful CAS; it receives
+    /// `(expected, next)` so callers can build messages or metrics without
+    /// observing stale races. If the closure panics, the panic propagates
+    /// after the state has already been updated.
     ///
     /// # Type Parameters
     /// - `R`: Output produced after the CAS succeeds.
@@ -417,7 +417,7 @@ impl FastCas {
         output: F,
     ) -> Result<FastCasSuccess<R>, FastCasError<Infallible>>
     where
-        F: Fn(u64, u64) -> R,
+        F: FnOnce(u64, u64) -> R,
     {
         let attempts = 1;
         match state.compare_set(expected, next) {
