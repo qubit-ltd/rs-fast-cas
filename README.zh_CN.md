@@ -85,3 +85,7 @@ Fast CAS 状态值从 `usize` 改为 `u64`。`FastCasState` 也从
 ## 许可证
 
 本项目使用 Apache License 2.0。
+
+## 设计说明
+
+架构、并发语义与迁移边界请参阅[当前设计说明](doc/design.zh_CN.md)。

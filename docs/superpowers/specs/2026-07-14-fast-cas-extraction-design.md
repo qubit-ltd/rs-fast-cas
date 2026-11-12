@@ -1,5 +1,10 @@
 # Fast CAS Extraction Design
 
+> **Historical design (2026-07-14).** This document records the extraction
+> proposal and its intended `rs-cas` re-export at that time. The re-export is
+> not a current compatibility guarantee. See the [current design](../../../doc/design.md)
+> for present architecture, behavior, and downstream integration observations.
+
 ## Goal
 
 Create the standalone `qubit-fast-cas` crate in `rs-fast-cas`, move the

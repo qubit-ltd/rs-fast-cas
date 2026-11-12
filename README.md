@@ -92,3 +92,8 @@ required.
 ## License
 
 Licensed under the Apache License, Version 2.0.
+
+## Design
+
+See the [current design](doc/design.md) for architecture, concurrency
+semantics, and migration boundaries.
