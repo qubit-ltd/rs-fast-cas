@@ -15,7 +15,7 @@ when the closure returns a business error.
 `FastCas` applies a bounded conflict policy (`Once`, `Spin`, or `SpinYield`)
 to a `CasCell` and returns typed decisions, success values, or terminal errors
 with attempt metadata. `FastCasState` is an alias for `CasCell`. State and
-attempt values are `u64` and `usize`, respectively.
+attempt values are `u64` and `u32`, respectively.
 
 ## Memory ordering
 

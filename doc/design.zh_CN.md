@@ -12,7 +12,7 @@
 
 `FastCas` 在 `CasCell` 上应用有界冲突策略（`Once`、`Spin` 或 `SpinYield`），并
 返回带尝试次数信息的强类型决策、成功值或终止错误。`FastCasState` 是 `CasCell`
-的类型别名。状态值使用 `u64`，尝试次数使用 `usize`。
+的类型别名。状态值使用 `u64`，尝试次数使用 `u32`。
 
 ## 内存序
 
