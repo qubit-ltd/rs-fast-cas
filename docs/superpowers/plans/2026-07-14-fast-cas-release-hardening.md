@@ -132,6 +132,14 @@
 
 ## Benchmark decisions
 
+> Historical measurements used the earlier worker-start timing protocol. The
+> current two-barrier protocol starts timing before releasing workers and still
+> includes barrier-release and join overhead. See the [2026-11-12 measurement
+> record](../../../doc/benchmark-20261112.md). Without a corrected-protocol
+> historical comparison or an isolated single-variable experiment, the results
+> below remain historical evidence and do not establish current spin/inline
+> causality.
+
 - Retained `spin_loop()` before immediate retries. With 30 samples, a one-second warm-up, and a two-second measurement window, two-thread contention improved by 27.5% for `Spin(16)` and 37.4% for `SpinYield(8, 64)`; four-thread `Spin(16)` improved by 24.6%. Other contention cases showed no statistically significant regression, and uncontended changes stayed within 2%.
 - Retained `#[inline(always)]` on `execute` and `update_by`. Replacing it with `#[inline]` regressed measured Spin contention across the tested thread counts, including an 18.3% two-thread regression for `Spin(16)`.
 - Changed the one-shot `compare_update` helpers to ordinary `#[inline]`; their uncontended benchmark did not justify forced inlining.

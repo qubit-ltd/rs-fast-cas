@@ -141,25 +141,31 @@ fn run_fast_cas_workload(cas: FastCas, thread_count: usize, operations_per_threa
     })
 }
 
-/// Starts synchronized scoped workers and measures their complete execution.
+/// Starts synchronized scoped workers and measures execution from releasing
+/// the start barrier through joining all workers. Thread creation and waiting
+/// for workers to reach the ready barrier are excluded.
 fn run_workers<F, W>(thread_count: usize, worker_factory: F) -> Duration
 where
     F: Fn() -> W,
     W: FnOnce() + Send,
 {
+    let ready_barrier = Barrier::new(thread_count + 1);
     let start_barrier = Barrier::new(thread_count + 1);
     thread::scope(|scope| {
         let mut handles = Vec::with_capacity(thread_count);
         for _ in 0..thread_count {
             let worker = worker_factory();
+            let ready_barrier = &ready_barrier;
             let start_barrier = &start_barrier;
             handles.push(scope.spawn(move || {
+                ready_barrier.wait();
                 start_barrier.wait();
                 worker();
             }));
         }
-        start_barrier.wait();
+        ready_barrier.wait();
         let started = Instant::now();
+        start_barrier.wait();
         for handle in handles {
             handle.join().expect("benchmark worker should not panic");
         }
